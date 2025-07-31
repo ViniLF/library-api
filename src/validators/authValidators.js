@@ -1,13 +1,5 @@
 const Joi = require('joi');
 
-/**
- * Validadores para endpoints de autenticação
- * Usando Joi para validação robusta de dados de entrada
- */
-
-/**
- * Schema para registro de usuário
- */
 const registerSchema = Joi.object({
   name: Joi.string()
     .min(2)
@@ -48,9 +40,6 @@ const registerSchema = Joi.object({
     })
 });
 
-/**
- * Schema para login de usuário
- */
 const loginSchema = Joi.object({
   email: Joi.string()
     .email()
@@ -69,9 +58,6 @@ const loginSchema = Joi.object({
     })
 });
 
-/**
- * Schema para refresh token
- */
 const refreshTokenSchema = Joi.object({
   refreshToken: Joi.string()
     .required()
@@ -81,24 +67,17 @@ const refreshTokenSchema = Joi.object({
     })
 });
 
-/**
- * Middleware de validação genérico
- * @param {Joi.Schema} schema - Schema Joi para validação
- * @param {string} property - Propriedade do request a ser validada (body, params, query)
- */
 const validate = (schema, property = 'body') => {
   return (req, res, next) => {
     const { error, value } = schema.validate(req[property], {
-      abortEarly: false, // Retorna todos os erros, não apenas o primeiro
-      stripUnknown: true // Remove campos não definidos no schema
+      abortEarly: false,
+      stripUnknown: true
     });
 
     if (error) {
-      // O middleware errorHandler vai capturar este erro
       return next(error);
     }
 
-    // Substitui os dados originais pelos dados validados/sanitizados
     req[property] = value;
     next();
   };
@@ -109,8 +88,6 @@ module.exports = {
   loginSchema,
   refreshTokenSchema,
   validate,
-  
-  // Middlewares prontos para usar nas rotas
   validateRegister: validate(registerSchema),
   validateLogin: validate(loginSchema),
   validateRefreshToken: validate(refreshTokenSchema)

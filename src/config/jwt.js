@@ -1,8 +1,5 @@
 const jwt = require('jsonwebtoken');
 
-/**
- * Configurações e utilitários para JWT
- */
 class JWTConfig {
   constructor() {
     this.secret = process.env.JWT_SECRET;
@@ -15,9 +12,6 @@ class JWTConfig {
     }
   }
 
-  /**
-   * Gera um access token
-   */
   generateAccessToken(payload) {
     return jwt.sign(payload, this.secret, {
       expiresIn: this.expiresIn,
@@ -26,9 +20,6 @@ class JWTConfig {
     });
   }
 
-  /**
-   * Gera um refresh token
-   */
   generateRefreshToken(payload) {
     return jwt.sign(payload, this.refreshSecret, {
       expiresIn: this.refreshExpiresIn,
@@ -37,9 +28,6 @@ class JWTConfig {
     });
   }
 
-  /**
-   * Verifica e decodifica um access token
-   */
   verifyAccessToken(token) {
     try {
       return jwt.verify(token, this.secret, {
@@ -51,9 +39,6 @@ class JWTConfig {
     }
   }
 
-  /**
-   * Verifica e decodifica um refresh token
-   */
   verifyRefreshToken(token) {
     try {
       return jwt.verify(token, this.refreshSecret, {
@@ -65,9 +50,6 @@ class JWTConfig {
     }
   }
 
-  /**
-   * Gera um par de tokens (access + refresh)
-   */
   generateTokenPair(payload) {
     const tokenPayload = {
       id: payload.id,

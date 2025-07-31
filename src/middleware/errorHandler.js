@@ -1,12 +1,7 @@
-/**
- * Middleware global para tratamento de erros
- * Centraliza o tratamento de todos os erros da aplicação
- */
 const errorHandler = (err, req, res, next) => {
   let error = { ...err };
   error.message = err.message;
 
-  // Log do erro para debugging
   if (process.env.NODE_ENV === 'development') {
     console.error('Error Details:', {
       message: err.message,
@@ -21,7 +16,7 @@ const errorHandler = (err, req, res, next) => {
     console.error('Error:', err.message);
   }
 
-  // Erro de validação do Joi
+  // Joi validation error
   if (err.isJoi) {
     const message = err.details.map(detail => detail.message).join(', ');
     return res.status(400).json({
@@ -34,7 +29,7 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // Erro do Prisma - Registro duplicado
+  // Prisma duplicate record
   if (err.code === 'P2002') {
     const field = err.meta?.target?.[0] || 'campo';
     return res.status(409).json({
@@ -47,7 +42,7 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // Erro do Prisma - Registro não encontrado
+  // Prisma record not found
   if (err.code === 'P2025') {
     return res.status(404).json({
       success: false,
@@ -58,7 +53,7 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // Erro do Prisma - Violação de constraint
+  // Prisma constraint violation
   if (err.code === 'P2003') {
     return res.status(400).json({
       success: false,
@@ -69,7 +64,7 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // Erro de JWT inválido
+  // JWT errors
   if (err.name === 'JsonWebTokenError') {
     return res.status(401).json({
       success: false,
@@ -80,7 +75,6 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // Erro de JWT expirado
   if (err.name === 'TokenExpiredError') {
     return res.status(401).json({
       success: false,
@@ -91,7 +85,7 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // Erro de sintaxe JSON
+  // JSON syntax error
   if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
     return res.status(400).json({
       success: false,
@@ -102,7 +96,7 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // Erros customizados da aplicação
+  // Custom application errors
   if (err.statusCode) {
     return res.status(err.statusCode).json({
       success: false,
@@ -113,7 +107,7 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // Erro interno do servidor (fallback)
+  // Generic server error
   res.status(500).json({
     success: false,
     error: {

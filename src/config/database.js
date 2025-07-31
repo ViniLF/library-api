@@ -1,9 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
 
-/**
- * Configuração e inicialização do cliente Prisma
- * Implementa padrão Singleton para garantir uma única instância
- */
 class Database {
   constructor() {
     if (!Database.instance) {
@@ -18,9 +14,6 @@ class Database {
     return Database.instance;
   }
 
-  /**
-   * Conecta ao banco de dados
-   */
   async connect() {
     try {
       await this.prisma.$connect();
@@ -31,9 +24,6 @@ class Database {
     }
   }
 
-  /**
-   * Desconecta do banco de dados
-   */
   async disconnect() {
     try {
       await this.prisma.$disconnect();
@@ -43,21 +33,14 @@ class Database {
     }
   }
 
-  /**
-   * Retorna a instância do Prisma Client
-   */
   getClient() {
     return this.prisma;
   }
 
-  /**
-   * Executa uma transação
-   */
   async transaction(callback) {
     return await this.prisma.$transaction(callback);
   }
 }
 
-// Exporta uma instância única (Singleton)
 const database = new Database();
 module.exports = database;
