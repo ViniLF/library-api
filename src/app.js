@@ -78,7 +78,10 @@ class App {
 
     // API routes
     const authRoutes = require('./routes/auth');
+    const bookRoutes = require('./routes/books');
+    
     this.app.use(`${baseRoute}/auth`, authRoutes);
+    this.app.use(`${baseRoute}/books`, bookRoutes);
     
     console.log(`🚀 API routes configured with base: ${baseRoute}`);
   }
