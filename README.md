@@ -11,11 +11,11 @@ Uma API RESTful completa para sistema de gerenciamento de biblioteca digital, de
 
 ## 🌐 Demo Online
 
-**API em Produção:** https://library-api-706f.onrender.com//api/v1
+**API em Produção:** https://library-api-706f.onrender.com/api/v1
 
-**Documentação:** https://library-api-706f.onrender.com//api/v1/docs
+**Documentação:** https://library-api-706f.onrender.com/api/v1/docs
 
-**Health Check:** https://library-api-706f.onrender.com//health
+**Health Check:** https://library-api-706f.onrender.com/health
 
 > **Credenciais de teste:**
 > - **Admin:** admin@email.com / 123456
