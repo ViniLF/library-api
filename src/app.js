@@ -6,6 +6,7 @@ require('dotenv').config();
 
 const errorHandler = require('./middleware/errorHandler');
 const notFound = require('./middleware/notFound');
+const { swaggerUi, specs } = require('./config/swagger');
 
 class App {
   constructor() {
@@ -59,6 +60,15 @@ class App {
     const apiVersion = process.env.API_VERSION || 'v1';
     const baseRoute = `${apiPrefix}/${apiVersion}`;
 
+    // Swagger Documentation
+    this.app.use(`${baseRoute}/docs`, swaggerUi.serve, swaggerUi.setup(specs, {
+      customCss: '.swagger-ui .topbar { display: none }',
+      customSiteTitle: 'Library API Documentation',
+      swaggerOptions: {
+        persistAuthorization: true
+      }
+    }));
+
     this.app.get(baseRoute, (req, res) => {
       res.json({
         message: 'Welcome to Library API',
@@ -88,6 +98,7 @@ class App {
     this.app.use(`${baseRoute}/authors`, authorRoutes);
     
     console.log(`🚀 API routes configured with base: ${baseRoute}`);
+    console.log(`📚 Swagger docs available at: ${baseRoute}/docs`);
   }
 
   setupErrorHandling() {
