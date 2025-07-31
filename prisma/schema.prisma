@@ -1,0 +1,171 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Usuários do sistema
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      UserRole @default(USER)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  loans        Loan[]
+  reservations Reservation[]
+
+  @@map("users")
+}
+
+// Enum para tipos de usuário
+enum UserRole {
+  USER
+  LIBRARIAN
+  ADMIN
+}
+
+// Autores
+model Author {
+  id          String   @id @default(cuid())
+  name        String
+  biography   String?
+  birthDate   DateTime?
+  nationality String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relacionamentos
+  books BookAuthor[]
+
+  @@map("authors")
+}
+
+// Categorias de livros
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relacionamentos
+  books Book[]
+
+  @@map("categories")
+}
+
+// Livros
+model Book {
+  id            String      @id @default(cuid())
+  title         String
+  isbn          String?     @unique
+  description   String?
+  publishedYear Int?
+  totalCopies   Int         @default(1)
+  availableCopies Int       @default(1)
+  language      String      @default("pt-BR")
+  pages         Int?
+  status        BookStatus  @default(AVAILABLE)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // Relacionamentos
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+  
+  authors      BookAuthor[]
+  loans        Loan[]
+  reservations Reservation[]
+
+  @@map("books")
+}
+
+// Enum para status do livro
+enum BookStatus {
+  AVAILABLE
+  UNAVAILABLE
+  MAINTENANCE
+}
+
+// Tabela de junção Many-to-Many entre Book e Author
+model BookAuthor {
+  bookId   String
+  authorId String
+  
+  book   Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  author Author @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@id([bookId, authorId])
+  @@map("book_authors")
+}
+
+// Empréstimos
+model Loan {
+  id           String     @id @default(cuid())
+  loanDate     DateTime   @default(now())
+  dueDate      DateTime
+  returnDate   DateTime?
+  status       LoanStatus @default(ACTIVE)
+  renewalCount Int        @default(0)
+  fine         Float      @default(0)
+  notes        String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relacionamentos
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+  
+  bookId String
+  book   Book   @relation(fields: [bookId], references: [id])
+
+  @@map("loans")
+}
+
+// Enum para status do empréstimo
+enum LoanStatus {
+  ACTIVE
+  RETURNED
+  OVERDUE
+  RENEWED
+}
+
+// Reservas
+model Reservation {
+  id              String            @id @default(cuid())
+  reservationDate DateTime          @default(now())
+  expirationDate  DateTime
+  status          ReservationStatus @default(ACTIVE)
+  notified        Boolean           @default(false)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  // Relacionamentos
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+  
+  bookId String
+  book   Book   @relation(fields: [bookId], references: [id])
+
+  @@unique([userId, bookId])
+  @@map("reservations")
+}
+
+// Enum para status da reserva
+enum ReservationStatus {
+  ACTIVE
+  FULFILLED
+  EXPIRED
+  CANCELLED
+}
