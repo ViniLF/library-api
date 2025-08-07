@@ -2,6 +2,7 @@ const express = require('express');
 const authController = require('../controllers/authController');
 const { validateRegister, validateLogin, validateRefreshToken } = require('../validators/authValidators');
 const { authenticate } = require('../middleware/authMiddleware');
+const { auditLogger } = require('../middleware/loggerMiddleware');
 
 const router = express.Router();
 
@@ -20,26 +21,16 @@ const router = express.Router();
  *     responses:
  *       201:
  *         description: Usuário criado com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/ApiResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       type: object
- *                       properties:
- *                         user:
- *                           $ref: '#/components/schemas/User'
  *       409:
  *         description: Email já cadastrado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ApiError'
+ *       429:
+ *         description: Muitas tentativas de registro
  */
-router.post('/register', validateRegister, authController.register);
+router.post('/register', 
+  validateRegister, 
+  auditLogger('USER_REGISTER', 'user'),
+  authController.register
+);
 
 /**
  * @swagger
@@ -56,38 +47,16 @@ router.post('/register', validateRegister, authController.register);
  *     responses:
  *       200:
  *         description: Login realizado com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/ApiResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       type: object
- *                       properties:
- *                         user:
- *                           $ref: '#/components/schemas/User'
- *                         tokens:
- *                           type: object
- *                           properties:
- *                             accessToken:
- *                               type: string
- *                               description: Token de acesso JWT
- *                             refreshToken:
- *                               type: string
- *                               description: Token para renovação
- *                             expiresIn:
- *                               type: string
- *                               description: Tempo de expiração
  *       401:
  *         description: Credenciais inválidas
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ApiError'
+ *       429:
+ *         description: Muitas tentativas de login
  */
-router.post('/login', validateLogin, authController.login);
+router.post('/login', 
+  validateLogin, 
+  auditLogger('USER_LOGIN', 'auth'),
+  authController.login
+);
 
 /**
  * @swagger
@@ -106,14 +75,19 @@ router.post('/login', validateLogin, authController.login);
  *             properties:
  *               refreshToken:
  *                 type: string
- *                 description: Refresh token válido
  *     responses:
  *       200:
  *         description: Token renovado com sucesso
  *       401:
- *         description: Refresh token inválido ou expirado
+ *         description: Refresh token inválido
+ *       429:
+ *         description: Muitas tentativas de renovação
  */
-router.post('/refresh-token', validateRefreshToken, authController.refreshToken);
+router.post('/refresh-token', 
+  validateRefreshToken, 
+  auditLogger('TOKEN_REFRESH', 'auth'),
+  authController.refreshToken
+);
 
 /**
  * @swagger
@@ -126,20 +100,8 @@ router.post('/refresh-token', validateRefreshToken, authController.refreshToken)
  *     responses:
  *       200:
  *         description: Perfil do usuário
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/ApiResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       type: object
- *                       properties:
- *                         user:
- *                           $ref: '#/components/schemas/User'
  *       401:
- *         description: Token inválido ou não fornecido
+ *         description: Token inválido
  */
 router.get('/me', authenticate, authController.getProfile);
 
@@ -155,7 +117,7 @@ router.get('/me', authenticate, authController.getProfile);
  *       200:
  *         description: Token válido
  *       401:
- *         description: Token inválido ou expirado
+ *         description: Token inválido
  */
 router.get('/verify-token', authenticate, authController.verifyToken);
 
@@ -171,8 +133,12 @@ router.get('/verify-token', authenticate, authController.verifyToken);
  *       200:
  *         description: Logout realizado com sucesso
  *       401:
- *         description: Token inválido ou não fornecido
+ *         description: Token inválido
  */
-router.post('/logout', authenticate, authController.logout);
+router.post('/logout', 
+  authenticate, 
+  auditLogger('USER_LOGOUT', 'auth'),
+  authController.logout
+);
 
 module.exports = router;

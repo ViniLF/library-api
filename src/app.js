@@ -6,7 +6,10 @@ require('dotenv').config();
 
 const errorHandler = require('./middleware/errorHandler');
 const notFound = require('./middleware/notFound');
+const { requestLogger, auditLogger } = require('./middleware/loggerMiddleware');
+const { generalLimiter, authLimiter, createLimiter, searchLimiter } = require('./middleware/rateLimiter');
 const { swaggerUi, specs } = require('./config/swagger');
+const logger = require('./config/logger');
 
 class App {
   constructor() {
@@ -17,6 +20,9 @@ class App {
   }
 
   setupMiddlewares() {
+    // Trust proxy para rate limiting correto
+    this.app.set('trust proxy', 1);
+
     this.app.use(helmet({
       contentSecurityPolicy: {
         directives: {
@@ -35,10 +41,15 @@ class App {
       credentials: true
     }));
 
+    // Rate limiting global
+    this.app.use(generalLimiter);
+
+    // Request logger
+    this.app.use(requestLogger);
+
+    // Morgan apenas em development para console
     if (process.env.NODE_ENV === 'development') {
       this.app.use(morgan('dev'));
-    } else {
-      this.app.use(morgan('combined'));
     }
 
     this.app.use(express.json({ limit: '10mb' }));
@@ -86,19 +97,23 @@ class App {
       });
     });
 
-    // API routes
+    // API routes com rate limiters específicos
     const authRoutes = require('./routes/auth');
     const bookRoutes = require('./routes/books');
     const categoryRoutes = require('./routes/categories');
     const authorRoutes = require('./routes/authors');
     
-    this.app.use(`${baseRoute}/auth`, authRoutes);
+    // Aplicar rate limiters específicos
+    this.app.use(`${baseRoute}/auth`, authLimiter, authRoutes);
     this.app.use(`${baseRoute}/books`, bookRoutes);
     this.app.use(`${baseRoute}/categories`, categoryRoutes);
     this.app.use(`${baseRoute}/authors`, authorRoutes);
     
-    console.log(`🚀 API routes configured with base: ${baseRoute}`);
-    console.log(`📚 Swagger docs available at: ${baseRoute}/docs`);
+    logger.info('API_STARTUP', {
+      message: 'API routes configured successfully',
+      baseRoute,
+      docsUrl: `${baseRoute}/docs`
+    });
   }
 
   setupErrorHandling() {
